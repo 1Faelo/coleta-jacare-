@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pontos de Coleta - Jacareí</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f4f4f2;
+    }
+
+    header {
+      background: #1a7a4a;
+      color: white;
+      padding: 16px 24px;
+    }
+
+    header h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem;
+    }
+
+    header h1 span { color: #a8e6c1; }
+
+    header p {
+      font-size: 0.82rem;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    .filtros {
+      background: white;
+      padding: 10px 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .filtros span {
+      font-size: 0.8rem;
+      color: #666;
+      font-weight: 500;
+    }
+
+    .btn {
+      border: 2px solid #ddd;
+      background: white;
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.78rem;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover { background: #f0f0f0; }
+    .btn.ativo { background: #1a7a4a; border-color: #1a7a4a; color: white; }
+
+    /* LAYOUT MAPA + PAINEL */
+    .conteudo {
+      display: flex;
+      height: calc(100vh - 110px);
+    }
+
+    #mapa {
+      flex: 1;
+    }
+
+    /* PAINEL LATERAL */
+    .painel {
+      width: 300px;
+      background: white;
+      overflow-y: auto;
+      border-left: 1px solid #ddd;
+    }
+
+    .painel-titulo {
+      padding: 14px 16px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #444;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .contagem {
+      background: #1a7a4a;
+      color: white;
+      border-radius: 12px;
+      padding: 2px 10px;
+      font-size: 0.75rem;
+    }
+
+    /* CARD DE CADA PONTO */
+    .card {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .card:hover { background: #f9f9f9; }
+
+    .card.ativo { background: #e8f5ee; border-left: 4px solid #1a7a4a; }
+
+    .card-nome {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+
+    .card-end {
+      font-size: 0.73rem;
+      color: #777;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    /* TAGS DE TIPO */
+    .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+
+    .tag {
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-size: 0.67rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .tag-reciclaveis { background: #e8f5ee; color: #1a7a4a; }
+    .tag-entulhos    { background: #fdf0e3; color: #c26a1e; }
+    .tag-eletronicos { background: #e3eef9; color: #1e5fa0; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>♻ Coleta<span>Jacareí</span></h1>
+    <p>Pontos de descarte e reciclagem da cidade</p>
+  </header>
+
+  <div class="filtros">
+    <span>Filtrar:</span>
+    <button class="btn ativo" onclick="filtrar('todos')">Todos</button>
+    <button class="btn" onclick="filtrar('reciclaveis')">♻ Recicláveis</button>
+    <button class="btn" onclick="filtrar('entulhos')">🏗 Entulho</button>
+    <button class="btn" onclick="filtrar('eletronicos')">💻 Eletrônicos</button>
+  </div>
+
+  <div class="conteudo">
+    <div id="mapa"></div>
+
+    <div class="painel">
+      <div class="painel-titulo">
+        Pontos encontrados
+        <span class="contagem" id="contagem">0</span>
+      </div>
+      <div id="lista"></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const mapa = L.map('mapa').setView([-23.3045, -45.9659], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(mapa);
+
+    let todosPontos = [];
+    let marcadores = [];
+
+    fetch('pontos.json')
+      .then(resposta => resposta.json())
+      .then(pontos => {
+        todosPontos = pontos;
+        renderizar(pontos);
+      });
+
+    function renderizar(lista) {
+      // Limpa marcadores e lista
+      marcadores.forEach(m => mapa.removeLayer(m));
+      marcadores = [];
+      document.getElementById('lista').innerHTML = '';
+      document.getElementById('contagem').textContent = lista.length;
+
+      lista.forEach(ponto => {
+        // Popup do mapa
+        const conteudo = `
+          <b>${ponto.nome}</b><br>
+          📍 ${ponto.endereco}<br>
+          ⏰ ${ponto.horario}<br>
+          📦 ${ponto.materiais.join(', ')}<br>
+          <a href="${ponto.url}" target="_blank">Ver site</a>
+        `;
+
+        const m = L.marker([ponto.latitude, ponto.longitude])
+          .addTo(mapa)
+          .bindPopup(conteudo);
+
+        marcadores.push(m);
+
+        // Card no painel lateral
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.id = `card-${ponto.id}`;
+
+        const tagsHTML = ponto.tipos.map(t =>
+          `<span class="tag tag-${t}">${t}</span>`
+        ).join('');
+
+        card.innerHTML = `
+          <div class="card-nome">${ponto.nome}</div>
+          <div class="card-end">📍 ${ponto.endereco}</div>
+          <div class="tags">${tagsHTML}</div>
+        `;
+
+        // Clique no card: vai para o ponto no mapa
+        card.onclick = () => {
+          mapa.setView([ponto.latitude, ponto.longitude], 16);
+          m.openPopup();
+          document.querySelectorAll('.card').forEach(c => c.classList.remove('ativo'));
+          card.classList.add('ativo');
+        };
+
+        document.getElementById('lista').appendChild(card);
+      });
+    }
+
+    function filtrar(tipo) {
+      document.querySelectorAll('.btn').forEach(b => b.classList.remove('ativo'));
+      event.target.classList.add('ativo');
+
+      const filtrados = tipo === 'todos'
+        ? todosPontos
+        : todosPontos.filter(p => p.tipos.includes(tipo));
+
+      renderizar(filtrados);
+    }
+  </script>
+
+</body>
+</html>

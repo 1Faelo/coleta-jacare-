@@ -1,0 +1,140 @@
+[
+    {
+        "id": 1,
+        "nome": "Cooperativa Recicla Jacareí",
+        "endereco": "R. Dra Zilda Arns, 208 - Jardim Real, Jacareí - SP, 12312-155",
+        "cidade": "Jacareí",
+        "estado": "SP",
+        "latitude": -23.3041126398845,
+        "longitude": -45.92795368584664,
+        "url": "https://cooperativajacareirecicla.my.canva.site/portif-lio-de-produtos/",
+        "tipos": 
+            [
+            "reciclaveis"
+            ],
+        
+        "materiais": 
+            [
+            "papel",
+            "plástico",
+            "vidro",
+            "metal"
+            ],
+        "horario": "Segunda a sexta: 8h às 17h",
+        "telefone": "(12) 3951-3551"
+    },
+
+    {
+        "id": 2,
+        "nome": "GDL RECICLAGEM",
+        "endereco": "R. Dr. Armando Azevedo, 242 - Jardim Paraiso, Jacareí - SP, 12316-310",
+        "cidade": "Jacareí",
+        "estado": "SP",
+        "latitude": -23.315065824718392,
+        "longitude": -45.937072988447746, 
+        "url": "https://sites.google.com/view/gdlreciclagem/in%C3%ADcio",
+        "tipos": 
+            [
+            "eletronicos"
+            ],
+        
+        "materiais": 
+            [
+            "celulares",
+            "computadores",
+            "televisores",
+            "eletrodomésticos"
+            ],
+        "horario": "Segunda a sábado: 8h às 17h",
+        "telefone": "(12) 99724-6321"
+    },
+
+    {
+        "id": 3,
+        "nome": "LEV Santa Maria",
+        "endereco": "Av. Malek Assad, 725 - Jardim Santa Maria, Jacareí - SP, 12328-080",
+        "cidade": "Jacareí",
+        "estado": "SP",
+        "latitude": -23.287061759721524, 
+        "longitude": -45.970154593007145,
+         "url": "https://levsantamaria.com.br/",
+         "tipos": 
+            [
+            "entulhos",
+            "reciclaveis"
+            ],
+       
+        "materiais":
+            [
+                "construçao civil",
+                "papel",
+                "moveis",
+                "pneus",
+                "eletronicos",
+                "plástico",
+                "oleo de cozinha"
+            ],
+        "horario": "Segunda a sábado: 8h às 18h",
+        "telefone": null
+    },
+
+    {
+        "id": 4,
+        "nome": "LEV Jardim Florida",
+        "endereco": "Av. Pensilvânia, 793 - Jardim Terras da Conceicao, Jacareí - SP, 12322-690 ",
+        "cidade": "Jacareí",
+        "estado": "SP",
+        "latitude": -23.30088023007941, 
+        "longitude": -45.985480697889415,
+         "url": "https://www.jacarei.sp.gov.br/lev/",
+         "tipos": 
+            [
+            "entulhos",
+            "reciclaveis"
+            ],
+       
+        "materiais":
+            [
+                "construçao civil",
+                "papel",
+                "moveis",
+                "pneus",
+                "eletronicos",
+                "plástico",
+                "oleo de cozinha"
+            ],
+        "horario": "Segunda a sábado: 7h às 19h",
+        "telefone": null
+    },
+
+    {
+        "id": 5,
+        "nome": "LEV Parque imperial",
+        "endereco": "Av. Nurimar Fazolari de Freitas, 15 - Parque Imperial, Jacareí - SP, 12329-011 ",
+        "cidade": "Jacareí",
+        "estado": "SP",
+        "latitude": -23.314433129901968,  
+        "longitude": -46.01655471801272,
+         "url": "https://www.jacarei.sp.gov.br/lev/",
+         "tipos": 
+            [
+            "entulhos",
+            "reciclaveis"
+            ],
+       
+        "materiais":
+            [
+                "construçao civil",
+                "papel",
+                "moveis",
+                "pneus",
+                "eletronicos",
+                "plástico",
+                "oleo de cozinha"
+            ],
+        "horario": "Segunda a sábado: 7h às 19h",
+        "telefone": null
+    }
+    
+
+]
