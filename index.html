@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Pontos de Coleta - Jacareí</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -14,192 +14,157 @@
     body {
       font-family: 'DM Sans', sans-serif;
       background: #f4f4f2;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden; /* Evita scroll na página inteira no desktop */
     }
 
     header {
       background: #1a7a4a;
       color: white;
-      padding: 16px 24px;
+      padding: 12px 20px;
+      flex-shrink: 0;
     }
 
-    header h1 {
-      font-family: 'Syne', sans-serif;
-      font-size: 1.4rem;
-    }
-
+    header h1 { font-family: 'Syne', sans-serif; font-size: 1.2rem; }
     header h1 span { color: #a8e6c1; }
-
-    header p {
-      font-size: 0.82rem;
-      opacity: 0.85;
-      margin-top: 2px;
-    }
+    header p { font-size: 0.75rem; opacity: 0.85; }
 
     .filtros {
       background: white;
-      padding: 10px 20px;
+      padding: 10px;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
       border-bottom: 1px solid #ddd;
-      flex-wrap: wrap;
+      overflow-x: auto; /* Permite scroll lateral nos filtros no mobile */
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
-    .filtros span {
-      font-size: 0.8rem;
-      color: #666;
-      font-weight: 500;
-    }
+    .filtros span { font-size: 0.75rem; color: #666; font-weight: bold; margin-right: 5px; }
 
     .btn {
       border: 2px solid #ddd;
       background: white;
       border-radius: 20px;
-      padding: 5px 14px;
-      font-size: 0.78rem;
-      font-family: 'DM Sans', sans-serif;
+      padding: 6px 12px;
+      font-size: 0.75rem;
       cursor: pointer;
-      transition: all 0.2s;
+      flex-shrink: 0;
     }
 
-    .btn:hover { background: #f0f0f0; }
     .btn.ativo { background: #1a7a4a; border-color: #1a7a4a; color: white; }
 
-    /* LAYOUT PRINCIPAL */
+    /* LAYOUT DINÂMICO */
     .conteudo {
       display: flex;
-      height: calc(100vh - 110px);
+      flex: 1;
       position: relative;
       overflow: hidden;
+      flex-direction: row;
     }
 
-    #mapa {
-      flex: 1;
-      min-width: 0;
-    }
+    #mapa { flex: 1; width: 100%; height: 100%; z-index: 1; }
 
-    /* PAINEL LATERAL */
+    /* PAINEL LATERAL (Desktop) / INFERIOR (Mobile) */
     .painel {
-      width: 300px;
-      min-width: 300px;
+      width: 320px;
       background: white;
       border-left: 1px solid #ddd;
       display: flex;
       flex-direction: column;
-      transition: min-width 0.3s ease, width 0.3s ease;
-      overflow: hidden;
-    }
-
-    .painel.recolhido {
-      width: 0;
-      min-width: 0;
+      transition: all 0.3s ease;
+      z-index: 10;
     }
 
     .painel-titulo {
-      padding: 14px 16px;
+      padding: 12px 16px;
       font-family: 'Syne', sans-serif;
       font-weight: 700;
-      font-size: 0.85rem;
-      color: #444;
+      font-size: 0.8rem;
       border-bottom: 1px solid #eee;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      white-space: nowrap;
     }
 
-    .contagem {
-      background: #1a7a4a;
-      color: white;
-      border-radius: 12px;
-      padding: 2px 10px;
-      font-size: 0.75rem;
-    }
+    .contagem { background: #1a7a4a; color: white; border-radius: 10px; padding: 1px 8px; font-size: 0.7rem; }
 
-    #lista {
-      overflow-y: auto;
-      flex: 1;
-    }
+    #lista { overflow-y: auto; flex: 1; }
 
-    /* BOTÃO DE TOGGLE */
+    /* BOTÃO DE TOGGLE (Apenas Desktop) */
     .btn-toggle {
       position: absolute;
-      right: 300px;
+      right: 320px;
       top: 50%;
-      transform: translateY(-50%);
-      z-index: 999;
+      z-index: 1000;
       background: #1a7a4a;
       color: white;
       border: none;
       border-radius: 8px 0 0 8px;
-      width: 22px;
-      height: 48px;
+      width: 24px;
+      height: 50px;
       cursor: pointer;
-      font-size: 0.75rem;
       transition: right 0.3s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
-    .btn-toggle.recolhido { right: 0; }
+    /* MEDIA QUERIES PARA MOBILE */
+    @media (max-width: 768px) {
+      body { overflow-y: auto; } /* Permite scroll no mobile */
+      
+      .conteudo {
+        flex-direction: column;
+        height: auto;
+        overflow: visible;
+      }
+
+      #mapa {
+        height: 45vh; /* Mapa ocupa quase metade da tela */
+        flex: none;
+      }
+
+      .painel {
+        width: 100%;
+        height: auto;
+        border-left: none;
+        border-top: 1px solid #ddd;
+      }
+
+      .btn-toggle { display: none; } /* Esconde o botão de fechar no mobile */
+      
+      .painel.recolhido { display: none; }
+    }
 
     /* CARDS */
-    .card {
-      padding: 12px 16px;
-      border-bottom: 1px solid #f0f0f0;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .card:hover { background: #f9f9f9; }
-    .card.ativo { background: #e8f5ee; border-left: 4px solid #1a7a4a; }
-
-    .card-nome {
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      font-size: 0.85rem;
-      margin-bottom: 4px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .card-end {
-      font-size: 0.73rem;
-      color: #777;
-      margin-bottom: 6px;
-      line-height: 1.4;
-    }
-
-    .tags { display: flex; flex-wrap: wrap; gap: 4px; }
-
-    .tag {
-      border-radius: 4px;
-      padding: 2px 7px;
-      font-size: 0.67rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
+    .card { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
+    .card:active { background: #e8f5ee; }
+    .card-nome { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+    .card-end { font-size: 0.75rem; color: #666; margin-bottom: 8px; }
+    .tags { display: flex; gap: 5px; }
+    .tag { border-radius: 4px; padding: 3px 8px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; }
     .tag-reciclaveis { background: #e8f5ee; color: #1a7a4a; }
     .tag-entulhos    { background: #fdf0e3; color: #c26a1e; }
     .tag-eletronicos { background: #e3eef9; color: #1e5fa0; }
+
+    /* Ajustes das Popups no Mobile */
+    .leaflet-popup-content { font-size: 0.8rem; line-height: 1.4; }
   </style>
 </head>
 <body>
 
   <header>
     <h1>♻ Coleta<span>Jacareí</span></h1>
-    <p>Pontos de descarte e reciclagem da cidade</p>
+    <p>Pontos de descarte e reciclagem</p>
   </header>
 
-  <div class="filtros">
-    <span>Filtrar:</span>
-    <button class="btn ativo" onclick="filtrar('todos')">Todos</button>
-    <button class="btn" onclick="filtrar('reciclaveis')">♻ Recicláveis</button>
-    <button class="btn" onclick="filtrar('entulhos')">🏗 Entulho</button>
-    <button class="btn" onclick="filtrar('eletronicos')">💻 Eletrônicos</button>
+  <div class="filtros" id="filtrosContainer">
+    <span>Filtros:</span>
+    <button class="btn ativo" onclick="filtrar('todos', this)">Todos</button>
+    <button class="btn" onclick="filtrar('reciclaveis', this)">♻ Recicláveis</button>
+    <button class="btn" onclick="filtrar('entulhos', this)">🏗 Entulho</button>
+    <button class="btn" onclick="filtrar('eletronicos', this)">💻 Eletrônicos</button>
   </div>
 
   <div class="conteudo">
@@ -219,7 +184,12 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    const mapa = L.map('mapa').setView([-23.3045, -45.9659], 13);
+    // Inicialização do mapa ajustada para Jacareí
+    const mapa = L.map('mapa', {
+      zoomControl: false // Vamos reposicionar o zoom para não bater nos botões
+    }).setView([-23.3045, -45.9659], 13);
+
+    L.control.zoom({ position: 'topleft' }).addTo(mapa);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
@@ -227,91 +197,101 @@
 
     let todosPontos = [];
     let marcadores = [];
-    let painelAberto = true;
+    let painelAberto = window.innerWidth > 768; // Começa fechado se for mobile
 
+    // Ajuste inicial do painel para mobile
+    if (!painelAberto) {
+      document.getElementById('painel').classList.add('recolhido');
+    }
+
+    // Carregar JSON (Simulado ou via Fetch)
     fetch('pontos.json')
-      .then(resposta => resposta.json())
+      .then(res => res.json())
       .then(pontos => {
         todosPontos = pontos;
         renderizar(pontos);
+      })
+      .catch(err => {
+        // Fallback caso o fetch falhe localmente (para testes)
+        console.error("Erro ao carregar JSON. Verifique se o arquivo pontos.json está na mesma pasta.");
       });
 
     function togglePainel() {
       const painel = document.getElementById('painel');
       const btn    = document.getElementById('btnToggle');
-
       painelAberto = !painelAberto;
 
       if (painelAberto) {
-        painel.classList.remove('recolhido');
-        btn.classList.remove('recolhido');
+        painel.style.width = "320px";
+        btn.style.right = "320px";
         btn.textContent = '❮';
       } else {
-        painel.classList.add('recolhido');
-        btn.classList.add('recolhido');
+        painel.style.width = "0";
+        btn.style.right = "0";
         btn.textContent = '❯';
       }
-
       setTimeout(() => mapa.invalidateSize(), 310);
     }
 
     function renderizar(lista) {
       marcadores.forEach(m => mapa.removeLayer(m));
       marcadores = [];
-      document.getElementById('lista').innerHTML = '';
+      const listaEl = document.getElementById('lista');
+      listaEl.innerHTML = '';
       document.getElementById('contagem').textContent = lista.length;
 
       lista.forEach(ponto => {
-        const conteudo = `
-          <b>${ponto.nome}</b><br>
-          📍 ${ponto.endereco}<br>
-          ⏰ ${ponto.horario}<br>
-          📦 ${ponto.materiais.join(', ')}<br>
-          <a href="${ponto.url}" target="_blank">Ver site</a>
+        // Criar Marcador
+        const m = L.marker([ponto.latitude, ponto.longitude]).addTo(mapa);
+        const popupContent = `
+          <div style="font-family: sans-serif">
+            <strong>${ponto.nome}</strong><br>
+            <small>${ponto.endereco}</small><br>
+            <p style="margin: 5px 0; font-size: 11px;">⏰ ${ponto.horario}</p>
+            <a href="${ponto.url}" target="_blank" style="color: #1a7a4a; font-weight: bold;">Ver detalhes</a>
+          </div>
         `;
-
-        const m = L.marker([ponto.latitude, ponto.longitude])
-          .addTo(mapa)
-          .bindPopup(conteudo);
-
+        m.bindPopup(popupContent);
         marcadores.push(m);
 
+        // Criar Card na Lista
         const card = document.createElement('div');
         card.className = 'card';
-        card.id = `card-${ponto.id}`;
-
-        const tagsHTML = ponto.tipos.map(t =>
-          `<span class="tag tag-${t}">${t}</span>`
-        ).join('');
+        const tagsHTML = ponto.tipos.map(t => `<span class="tag tag-${t}">${t}</span>`).join('');
 
         card.innerHTML = `
           <div class="card-nome">${ponto.nome}</div>
-          <div class="card-end">📍 ${ponto.endereco}</div>
+          <div class="card-end">${ponto.endereco}</div>
           <div class="tags">${tagsHTML}</div>
         `;
 
         card.onclick = () => {
           mapa.setView([ponto.latitude, ponto.longitude], 16);
           m.openPopup();
-          document.querySelectorAll('.card').forEach(c => c.classList.remove('ativo'));
-          card.classList.add('ativo');
+          
+          // Se for mobile, faz scroll suave até o mapa
+          if (window.innerWidth <= 768) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+          
+          document.querySelectorAll('.card').forEach(c => c.style.background = 'white');
+          card.style.background = '#e8f5ee';
         };
 
-        document.getElementById('lista').appendChild(card);
+        listaEl.appendChild(card);
       });
     }
 
-    function filtrar(tipo) {
+    function filtrar(tipo, elemento) {
       document.querySelectorAll('.btn').forEach(b => b.classList.remove('ativo'));
-      event.target.classList.add('ativo');
+      elemento.classList.add('ativo');
 
-      const filtrados = tipo === 'todos'
-        ? todosPontos
+      const filtrados = tipo === 'todos' 
+        ? todosPontos 
         : todosPontos.filter(p => p.tipos.includes(tipo));
 
       renderizar(filtrados);
     }
   </script>
-
 </body>
 </html>
