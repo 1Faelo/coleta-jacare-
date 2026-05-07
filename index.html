@@ -17,7 +17,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
-      overflow: hidden; /* Evita scroll na página inteira no desktop */
+      overflow: hidden;
     }
 
     header {
@@ -38,7 +38,7 @@
       gap: 8px;
       align-items: center;
       border-bottom: 1px solid #ddd;
-      overflow-x: auto; /* Permite scroll lateral nos filtros no mobile */
+      overflow-x: auto;
       white-space: nowrap;
       flex-shrink: 0;
     }
@@ -53,11 +53,12 @@
       font-size: 0.75rem;
       cursor: pointer;
       flex-shrink: 0;
+      transition: all 0.2s;
     }
 
     .btn.ativo { background: #1a7a4a; border-color: #1a7a4a; color: white; }
 
-    /* LAYOUT DINÂMICO */
+    /* LAYOUT PRINCIPAL */
     .conteudo {
       display: flex;
       flex: 1;
@@ -68,7 +69,32 @@
 
     #mapa { flex: 1; width: 100%; height: 100%; z-index: 1; }
 
-    /* PAINEL LATERAL (Desktop) / INFERIOR (Mobile) */
+    /* BOTÃO CENTRALIZAR */
+    .btn-centralizar {
+      position: absolute;
+      top: 10px;
+      left: 50px; /* Posicionado ao lado dos controles de zoom padrão */
+      z-index: 1000;
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: all 0.2s;
+    }
+
+    .btn-centralizar:hover {
+      background: #f0f0f0;
+      transform: scale(1.05);
+    }
+
+    /* PAINEL LATERAL / INFERIOR */
     .painel {
       width: 320px;
       background: white;
@@ -94,7 +120,7 @@
 
     #lista { overflow-y: auto; flex: 1; }
 
-    /* BOTÃO DE TOGGLE (Apenas Desktop) */
+    /* BOTÃO TOGGLE (Desktop) */
     .btn-toggle {
       position: absolute;
       right: 320px;
@@ -108,11 +134,14 @@
       height: 50px;
       cursor: pointer;
       transition: right 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* MEDIA QUERIES PARA MOBILE */
+    /* MEDIA QUERIES MOBILE */
     @media (max-width: 768px) {
-      body { overflow-y: auto; } /* Permite scroll no mobile */
+      body { overflow-y: auto; }
       
       .conteudo {
         flex-direction: column;
@@ -121,8 +150,12 @@
       }
 
       #mapa {
-        height: 45vh; /* Mapa ocupa quase metade da tela */
+        height: 45vh;
         flex: none;
+      }
+
+      .btn-centralizar {
+        left: 10px; /* No mobile fica mais à esquerda */
       }
 
       .painel {
@@ -132,35 +165,31 @@
         border-top: 1px solid #ddd;
       }
 
-      .btn-toggle { display: none; } /* Esconde o botão de fechar no mobile */
-      
+      .btn-toggle { display: none; }
       .painel.recolhido { display: none; }
     }
 
     /* CARDS */
-    .card { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
-    .card:active { background: #e8f5ee; }
+    .card { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s; }
+    .card:hover { background: #f9f9f9; }
     .card-nome { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
     .card-end { font-size: 0.75rem; color: #666; margin-bottom: 8px; }
-    .tags { display: flex; gap: 5px; }
+    .tags { display: flex; gap: 5px; flex-wrap: wrap; }
     .tag { border-radius: 4px; padding: 3px 8px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; }
     .tag-reciclaveis { background: #e8f5ee; color: #1a7a4a; }
     .tag-entulhos    { background: #fdf0e3; color: #c26a1e; }
     .tag-eletronicos { background: #e3eef9; color: #1e5fa0; }
-
-    /* Ajustes das Popups no Mobile */
-    .leaflet-popup-content { font-size: 0.8rem; line-height: 1.4; }
   </style>
 </head>
 <body>
 
   <header>
     <h1>♻ Coleta<span>Jacareí</span></h1>
-    <p>Pontos de descarte e reciclagem</p>
+    <p>Pontos de descarte e reciclagem da cidade</p>
   </header>
 
-  <div class="filtros" id="filtrosContainer">
-    <span>Filtros:</span>
+  <div class="filtros">
+    <span>Filtrar:</span>
     <button class="btn ativo" onclick="filtrar('todos', this)">Todos</button>
     <button class="btn" onclick="filtrar('reciclaveis', this)">♻ Recicláveis</button>
     <button class="btn" onclick="filtrar('entulhos', this)">🏗 Entulho</button>
@@ -168,6 +197,10 @@
   </div>
 
   <div class="conteudo">
+    <button class="btn-centralizar" onclick="centralizarJacarei()" title="Centralizar em Jacareí">
+        🎯
+    </button>
+
     <div id="mapa"></div>
 
     <button class="btn-toggle" id="btnToggle" onclick="togglePainel()">❮</button>
@@ -184,12 +217,9 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <script>
-    // Inicialização do mapa ajustada para Jacareí
-    const mapa = L.map('mapa', {
-      zoomControl: false // Vamos reposicionar o zoom para não bater nos botões
-    }).setView([-23.3045, -45.9659], 13);
-
-    L.control.zoom({ position: 'topleft' }).addTo(mapa);
+    // Configurações iniciais
+    const centroJacarei = [-23.3045, -45.9659];
+    const mapa = L.map('mapa', { zoomControl: true }).setView(centroJacarei, 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
@@ -197,28 +227,25 @@
 
     let todosPontos = [];
     let marcadores = [];
-    let painelAberto = window.innerWidth > 768; // Começa fechado se for mobile
+    let painelAberto = window.innerWidth > 768;
 
-    // Ajuste inicial do painel para mobile
-    if (!painelAberto) {
-      document.getElementById('painel').classList.add('recolhido');
-    }
-
-    // Carregar JSON (Simulado ou via Fetch)
+    // Carregar os dados
     fetch('pontos.json')
-      .then(res => res.json())
-      .then(pontos => {
-        todosPontos = pontos;
-        renderizar(pontos);
+      .then(response => response.json())
+      .then(data => {
+        todosPontos = data;
+        renderizar(todosPontos);
       })
-      .catch(err => {
-        // Fallback caso o fetch falhe localmente (para testes)
-        console.error("Erro ao carregar JSON. Verifique se o arquivo pontos.json está na mesma pasta.");
-      });
+      .catch(err => console.error("Erro ao carregar pontos.json:", err));
+
+    function centralizarJacarei() {
+      mapa.setView(centroJacarei, 13);
+      mapa.closePopup();
+    }
 
     function togglePainel() {
       const painel = document.getElementById('painel');
-      const btn    = document.getElementById('btnToggle');
+      const btn = document.getElementById('btnToggle');
       painelAberto = !painelAberto;
 
       if (painelAberto) {
@@ -234,6 +261,7 @@
     }
 
     function renderizar(lista) {
+      // Limpar marcadores anteriores
       marcadores.forEach(m => mapa.removeLayer(m));
       marcadores = [];
       const listaEl = document.getElementById('lista');
@@ -241,27 +269,27 @@
       document.getElementById('contagem').textContent = lista.length;
 
       lista.forEach(ponto => {
-        // Criar Marcador
+        // Marcador no Mapa
         const m = L.marker([ponto.latitude, ponto.longitude]).addTo(mapa);
         const popupContent = `
-          <div style="font-family: sans-serif">
+          <div style="min-width: 150px">
             <strong>${ponto.nome}</strong><br>
             <small>${ponto.endereco}</small><br>
-            <p style="margin: 5px 0; font-size: 11px;">⏰ ${ponto.horario}</p>
-            <a href="${ponto.url}" target="_blank" style="color: #1a7a4a; font-weight: bold;">Ver detalhes</a>
+            <p style="margin-top:5px; font-size:11px">⏰ ${ponto.horario}</p>
+            <a href="${ponto.url}" target="_blank" style="color:#1a7a4a; font-weight:bold">Ver mais</a>
           </div>
         `;
         m.bindPopup(popupContent);
         marcadores.push(m);
 
-        // Criar Card na Lista
+        // Card na Lista
         const card = document.createElement('div');
         card.className = 'card';
         const tagsHTML = ponto.tipos.map(t => `<span class="tag tag-${t}">${t}</span>`).join('');
 
         card.innerHTML = `
           <div class="card-nome">${ponto.nome}</div>
-          <div class="card-end">${ponto.endereco}</div>
+          <div class="card-end">📍 ${ponto.endereco}</div>
           <div class="tags">${tagsHTML}</div>
         `;
 
@@ -269,7 +297,6 @@
           mapa.setView([ponto.latitude, ponto.longitude], 16);
           m.openPopup();
           
-          // Se for mobile, faz scroll suave até o mapa
           if (window.innerWidth <= 768) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }
@@ -282,9 +309,9 @@
       });
     }
 
-    function filtrar(tipo, elemento) {
+    function filtrar(tipo, btnElemento) {
       document.querySelectorAll('.btn').forEach(b => b.classList.remove('ativo'));
-      elemento.classList.add('ativo');
+      btnElemento.classList.add('ativo');
 
       const filtrados = tipo === 'todos' 
         ? todosPontos 
@@ -293,5 +320,6 @@
       renderizar(filtrados);
     }
   </script>
+
 </body>
 </html>
