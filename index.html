@@ -42,6 +42,7 @@
       gap: 10px;
       align-items: center;
       border-bottom: 1px solid #ddd;
+      flex-wrap: wrap;
     }
 
     .filtros span {
@@ -64,22 +65,30 @@
     .btn:hover { background: #f0f0f0; }
     .btn.ativo { background: #1a7a4a; border-color: #1a7a4a; color: white; }
 
-    /* LAYOUT MAPA + PAINEL */
+    /* LAYOUT PRINCIPAL */
     .conteudo {
       display: flex;
       height: calc(100vh - 110px);
+      position: relative;
     }
 
-    #mapa {
-      flex: 1;
-    }
+    #mapa { flex: 1; }
 
     /* PAINEL LATERAL */
     .painel {
       width: 300px;
       background: white;
-      overflow-y: auto;
       border-left: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      transition: width 0.3s ease;
+      overflow: hidden;
+    }
+
+    /* PAINEL RECOLHIDO */
+    .painel.recolhido {
+      width: 0;
+      border-left: none;
     }
 
     .painel-titulo {
@@ -92,6 +101,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      white-space: nowrap;
     }
 
     .contagem {
@@ -102,16 +112,42 @@
       font-size: 0.75rem;
     }
 
-    /* CARD DE CADA PONTO */
+    #lista { overflow-y: auto; flex: 1; }
+
+    /* BOTÃO DE MINIMIZAR — fica na borda do painel */
+    .btn-toggle {
+      position: absolute;
+      right: 300px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1000;
+      background: #1a7a4a;
+      color: white;
+      border: none;
+      border-radius: 8px 0 0 8px;
+      width: 22px;
+      height: 48px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: right 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-toggle.recolhido { right: 0; }
+
+    /* CARDS */
     .card {
       padding: 12px 16px;
       border-bottom: 1px solid #f0f0f0;
       cursor: pointer;
       transition: background 0.15s;
+      white-space: nowrap;
+      overflow: hidden;
     }
 
     .card:hover { background: #f9f9f9; }
-
     .card.ativo { background: #e8f5ee; border-left: 4px solid #1a7a4a; }
 
     .card-nome {
@@ -119,6 +155,8 @@
       font-weight: 700;
       font-size: 0.85rem;
       margin-bottom: 4px;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .card-end {
@@ -126,9 +164,9 @@
       color: #777;
       margin-bottom: 6px;
       line-height: 1.4;
+      white-space: normal;
     }
 
-    /* TAGS DE TIPO */
     .tags { display: flex; flex-wrap: wrap; gap: 4px; }
 
     .tag {
@@ -142,6 +180,57 @@
     .tag-reciclaveis { background: #e8f5ee; color: #1a7a4a; }
     .tag-entulhos    { background: #fdf0e3; color: #c26a1e; }
     .tag-eletronicos { background: #e3eef9; color: #1e5fa0; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 640px) {
+
+      header { padding: 12px 16px; }
+      header h1 { font-size: 1.1rem; }
+
+      .filtros { padding: 8px 12px; gap: 6px; }
+      .btn { padding: 4px 10px; font-size: 0.72rem; }
+
+      /* No mobile o layout vira coluna */
+      .conteudo {
+        flex-direction: column;
+        height: auto;
+      }
+
+      #mapa {
+        height: 55vh;
+        width: 100%;
+      }
+
+      /* Painel fica embaixo do mapa */
+      .painel {
+        width: 100% !important;
+        border-left: none;
+        border-top: 1px solid #ddd;
+        max-height: 40vh;
+        overflow-y: auto;
+      }
+
+      /* No mobile o painel recolhe para cima (altura 0) */
+      .painel.recolhido {
+        width: 100% !important;
+        max-height: 0;
+      }
+
+      /* Botão de toggle fica na parte de baixo do mapa */
+      .btn-toggle {
+        right: 50% !important;
+        transform: translateX(50%);
+        top: auto;
+        bottom: 45vh;
+        border-radius: 8px 8px 0 0;
+        width: 48px;
+        height: 22px;
+      }
+
+      .btn-toggle.recolhido {
+        bottom: 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -162,7 +251,10 @@
   <div class="conteudo">
     <div id="mapa"></div>
 
-    <div class="painel">
+    <!-- Botão de minimizar/maximizar -->
+    <button class="btn-toggle" id="btnToggle" onclick="togglePainel()">❮</button>
+
+    <div class="painel" id="painel">
       <div class="painel-titulo">
         Pontos encontrados
         <span class="contagem" id="contagem">0</span>
@@ -182,6 +274,7 @@
 
     let todosPontos = [];
     let marcadores = [];
+    let painelAberto = true;
 
     fetch('pontos.json')
       .then(resposta => resposta.json())
@@ -190,15 +283,33 @@
         renderizar(pontos);
       });
 
+    function togglePainel() {
+      const painel = document.getElementById('painel');
+      const btn    = document.getElementById('btnToggle');
+
+      painelAberto = !painelAberto;
+
+      if (painelAberto) {
+        painel.classList.remove('recolhido');
+        btn.classList.remove('recolhido');
+        btn.textContent = '❮';
+      } else {
+        painel.classList.add('recolhido');
+        btn.classList.add('recolhido');
+        btn.textContent = '❯';
+      }
+
+      // Avisa o mapa que o tamanho mudou
+      setTimeout(() => mapa.invalidateSize(), 310);
+    }
+
     function renderizar(lista) {
-      // Limpa marcadores e lista
       marcadores.forEach(m => mapa.removeLayer(m));
       marcadores = [];
       document.getElementById('lista').innerHTML = '';
       document.getElementById('contagem').textContent = lista.length;
 
       lista.forEach(ponto => {
-        // Popup do mapa
         const conteudo = `
           <b>${ponto.nome}</b><br>
           📍 ${ponto.endereco}<br>
@@ -213,7 +324,6 @@
 
         marcadores.push(m);
 
-        // Card no painel lateral
         const card = document.createElement('div');
         card.className = 'card';
         card.id = `card-${ponto.id}`;
@@ -228,7 +338,6 @@
           <div class="tags">${tagsHTML}</div>
         `;
 
-        // Clique no card: vai para o ponto no mapa
         card.onclick = () => {
           mapa.setView([ponto.latitude, ponto.longitude], 16);
           m.openPopup();
